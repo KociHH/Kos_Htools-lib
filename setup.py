@@ -24,7 +24,7 @@ setup(
     description="Мини библиотека для работы с Telegram и Redis",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url=f"https://github.com/{__user_name__}/kos_Htools",
+    url=f"https://github.com/{__user_name__}/helping_libs",
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
