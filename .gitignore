@@ -1,0 +1,12 @@
+.env
+.env.*
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.py[cod]
+*$py.class
+testings.py
+tools.py
+*.session
+.pypirc
