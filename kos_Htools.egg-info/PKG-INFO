@@ -1,8 +1,8 @@
 Metadata-Version: 2.4
 Name: kos_Htools
-Version: 0.1.0
+Version: 0.1.0.post1
 Summary: Мини библиотека для работы с Telegram и Redis
-Home-page: https://github.com/kosiniii/kos_Htools
+Home-page: https://github.com/kosiniii/helping_libs
 Author: kosiniii
 Author-email: defensiv2010@gmail.com
 Classifier: Programming Language :: Python :: 3

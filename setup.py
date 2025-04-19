@@ -1,18 +1,15 @@
 from setuptools import setup, find_packages
 import os
-import sys
 
-# Добавляем родительскую директорию в путь для импорта
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+here = os.path.abspath(os.path.dirname(__file__))
 from tools import __me_email__, __user_name__
 
-# Читаем README.md с правильной кодировкой
-with open("README.md", "r", encoding="utf-8") as fh:
+with open(os.path.join(here, "README.md"), "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
     name="kos_Htools",
-    version="0.1.0",
+    version="0.1.0.post1",
     packages=find_packages(),
     install_requires=[
         "telethon>=1.39.0",
