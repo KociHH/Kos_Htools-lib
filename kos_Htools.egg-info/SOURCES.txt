@@ -14,4 +14,5 @@ kos_Htools/telethon_core/config.py
 kos_Htools/telethon_core/settings.py
 kos_Htools/telethon_core/utils/__init__.py
 kos_Htools/telethon_core/utils/dataclasses.py
+kos_Htools/telethon_core/utils/other.py
 kos_Htools/telethon_core/utils/parse.py

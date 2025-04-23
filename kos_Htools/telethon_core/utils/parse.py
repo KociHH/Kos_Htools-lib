@@ -6,7 +6,6 @@ from telethon.tl.functions.channels import JoinChannelRequest, GetFullChannelReq
 from telethon.tl.functions.messages import ImportChatInviteRequest
 from telethon.tl.types import ChannelParticipantsSearch, Channel, PeerChannel, User
 from telethon.errors import UserAlreadyParticipantError
-from ..clients import multi
 import asyncio
 
 
@@ -38,6 +37,8 @@ class UserParse:
         Returns:
             bool: True если проверка прошла успешно, False если есть проблемы
         """
+        from ...telethon_core import multi
+        
         total_chats = len(self.chat_usernames.get('chats', [])) + len(self.chat_usernames.get('channles', []))
         
         if total_chats > 100:
@@ -130,7 +131,7 @@ class UserParse:
         return None
 
 
-    async def collect_user_ids(self) -> dict[Union[int, str], list[int]]:
+    async def collect_user_ids(self, check_delete_acc: bool = True) -> dict[Union[int, str], list[int]]:
         """
         Return:
             dict[str: [int]] -> {chat_id | username: [int]}
@@ -150,8 +151,10 @@ class UserParse:
                         entity = await self.client.get_entity(chat)
                         self.user_ids[chat] = []
                         async for user in self.client.iter_participants(entity):
-                            if await self.check_account(user.id):
-                                self.user_ids[chat].append(user.id)
+                            if check_delete_acc:
+                                if not await self.check_account(user.id):
+                                    continue
+                            self.user_ids[chat].append(user.id)
                             
                         logger.info(
                             f'Успешный парсинг чата {chat}\n'
@@ -176,8 +179,10 @@ class UserParse:
                             
                             self.user_ids[channel] = []
                             async for user in self.client.iter_participants(linked_chat):
-                                if await self.check_account(user.id):
-                                    self.user_ids[channel].append(user.id)
+                                if check_delete_acc:
+                                    if not await self.check_account(user.id):
+                                        continue
+                                self.user_ids[channel].append(user.id)
                             
                             logger.info(
                                 f"Привязанная группа канала {channel} успешно спарсена.\n"

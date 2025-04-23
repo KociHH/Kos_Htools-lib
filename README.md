@@ -59,21 +59,94 @@ TELEGRAM_PHONE_NUMBER=phone1,phone2,phone3
 ### Telegram Tools
 
 ```python
-from kos_Htools import MultiAccountManager, TelegramAPI, UserParse
+from kos_Htools.telethon_core import multi, create_custom_manager
+from kos_Htools.telethon_core.utils.parse import UserParse
 import asyncio
 
 async def main():
-    # Инициализация менеджера аккаунтов
-    data_telethon = TelegramAPI().create_json()
-    multi = MultiAccountManager(data_telethon) # можно добавить system_version, device_model или скипнуть
+    # Способ 1: Использование предварительно созданного экземпляра multi
+    # (Использует данные из .env файла)
     client = await multi()
     
+    # Способ 2: Создание пользовательского менеджера с собственными данными
+    accounts_data = [
+        {
+            "api_id": 123456,
+            "api_hash": "your_api_hash",
+            "phone_number": "+1234567890",
+            "proxy": None  # Можно указать прокси в формате tuple
+        }
+    ]
+    custom_multi = create_custom_manager(
+        accounts_data,
+        system_version="Windows 10",  # Опционально
+        device_model="PC 64bit"       # Опционально
+    )
+    custom_client = await custom_multi()
+
     # Парсинг пользователей
     parser = UserParse(client, {'chats': ['https://t.me/groupname']})
     user_ids = await parser.collect_user_ids()
     
-    # Парсер кол-во сообщений в чатах у user
+    # Анализ сообщений пользователей
     messages = await parser.collect_user_messages(limit=100, sum_count=True)
+    
+    # Закрытие клиентов после использования
+    await multi.stop_clients()
+    await custom_multi.stop_clients()
+
+if __name__ == '__main__':
+    asyncio.run(main())
+```
+
+### Полный пример работы с парсингом пользователей
+
+```python
+from kos_Htools.telethon_core import multi
+from kos_Htools.telethon_core.utils.parse import UserParse
+import asyncio
+import logging
+
+# Настройка логирования
+logging.basicConfig(level=logging.INFO, 
+                   format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+async def main():
+    # Получение клиента Telegram
+    client = await multi()
+    
+    # Пример парсинга ID пользователей из чата
+    chat_data = {'chats': ['https://t.me/example_chat']}
+    parser = UserParse(client, chat_data)
+    
+    # Получение ID пользователей
+    user_ids = await parser.collect_user_ids()
+    if user_ids:
+        logger.info(f"Собрано {sum(len(ids) for ids in user_ids.values())} ID пользователей")
+        
+    # Пример анализа сообщений пользователей
+    messages = await parser.collect_user_messages(limit=200, sum_count=True)
+    if messages:
+
+        # Топ 5 активных пользователей
+        top_users = sorted(
+            messages.items(), 
+            key=lambda x: x[1].get('total_messages', 0), 
+            reverse=True
+        )[:5]
+        
+        logger.info("Топ 5 активных пользователей:")
+        for user_id, data in top_users:
+            logger.info(f"Пользователь {user_id}: {data.get('total_messages', 0)} сообщений")
+    
+    # Закрытие клиентов
+    await multi.stop_clients()
+    
+    return user_ids, messages
+
+if __name__ == '__main__':
+    asyncio.run(main())
 ```
 
 ### Redis Tools
@@ -95,7 +168,7 @@ cached_data = redis_base.get_cached()
 
 ## Требования
 
-- Python 3.6+
+- Python 3.10+
 - Telethon
 - Redis
 - python-dotenv 
