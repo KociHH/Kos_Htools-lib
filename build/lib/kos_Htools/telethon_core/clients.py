@@ -3,7 +3,6 @@ import logging
 import os
 from telethon.sync import TelegramClient
 from telethon.errors import FloodWaitError
-from telethon_core.settings import TelegramAPI
 from itertools import cycle
 from typing import Union
 logger = logging.getLogger(__name__)
@@ -116,5 +115,11 @@ class MultiAccountManager:
         except Exception as e:
             logger.error(f'Не перепрал в функции cycle_clients: \n {e}')
             
-data_telethon = TelegramAPI().create_json()
-multi = MultiAccountManager(data_telethon)
+
+def create_multi_account_manager():
+    from .settings import TelegramAPI
+    data_telethon = TelegramAPI().create_json()
+    return MultiAccountManager(data_telethon)
+
+
+multi = None
