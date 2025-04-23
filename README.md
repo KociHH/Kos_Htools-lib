@@ -38,6 +38,15 @@ TELEGRAM_API_HASH=ваш_api_hash
 TELEGRAM_PHONE_NUMBER=ваш_номер_телефона
 ```
 
+Так же можно добавить proxy для каждой сессии например:
+```
+TELEGRAM_PROXY=socks5:ip:port:username:password 
+
+Другой формат добавления:   
+socks5:ip:port
+http:ip:port
+```
+
 Для работы с несколькими аккаунтами, разделите значения через запятую:
 ```
 TELEGRAM_API_ID=id1,id2,id3
@@ -56,14 +65,14 @@ import asyncio
 async def main():
     # Инициализация менеджера аккаунтов
     data_telethon = TelegramAPI().create_json()
-    multi = MultiAccountManager(data_telethon)
+    multi = MultiAccountManager(data_telethon) # можно добавить system_version, device_model или скипнуть
     client = await multi()
     
     # Парсинг пользователей
     parser = UserParse(client, {'chats': ['https://t.me/groupname']})
     user_ids = await parser.collect_user_ids()
     
-    # Анализ сообщений
+    # Парсер кол-во сообщений в чатах у user
     messages = await parser.collect_user_messages(limit=100, sum_count=True)
 ```
 

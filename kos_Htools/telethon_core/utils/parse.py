@@ -250,5 +250,3 @@ class UserParse:
         except Exception as e:
             logger.error(f'Ошибка при подсчете сообщений пользователей:\n {e}')
             return {}
-        
-    

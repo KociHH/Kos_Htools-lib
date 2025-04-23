@@ -5,14 +5,24 @@ from telethon.sync import TelegramClient
 from telethon.errors import FloodWaitError
 from telethon_core.settings import TelegramAPI
 from itertools import cycle
+from typing import Union
 logger = logging.getLogger(__name__)
 
 class MultiAccountManager:
-    def __init__(self, accounts_data):
+    def __init__(
+            self,
+            accounts_data: dict[str, Union[str, int]],
+            system_version: str | None = "Windows 10",
+            device_model: str | None = "PC 64bit"
+            ):
+        
         self.accounts_data = accounts_data
         self.clients = {}
         self.client_cycle = None
         self.current_client = None
+        
+        self.system_version = system_version
+        self.device_model = device_model
 
     async def __call__(self):
         if not self.clients:
@@ -31,13 +41,21 @@ class MultiAccountManager:
             api_id = account.get("api_id")
             api_hash = account.get("api_hash")
             phone_number = account.get("phone_number")
+            proxy: tuple = account.get('proxy')
             session_file = f'session_{phone_number}.session'
             
             if phone_number in self.clients.keys():
                 logger.info(f"Аккаунт {phone_number} уже запущен")
                 continue
                      
-            client = TelegramClient(f'session_{phone_number}', api_id, api_hash)
+            client = TelegramClient(
+                session=f'session_{phone_number}',
+                api_id=api_id,
+                api_hash=api_hash,
+                device_model=self.device_model,
+                system_version=self.system_version,
+                proxy=proxy
+                )
             try:
                 if os.path.exists(session_file):
                     await client.connect()
