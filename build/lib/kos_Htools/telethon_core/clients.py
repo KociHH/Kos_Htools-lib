@@ -82,16 +82,29 @@ class MultiAccountManager:
             self.cycle_clients()
 
 
-    async def get_or_switch_client(self, switch: bool = False):
+    async def get_or_switch_client(self, phone_session: str | None = None, switch: bool = False):
         if not self.clients:
             logger.error("Нет подключенных клиентов!")
             return None
+        
+        if phone_session and phone_session in self.clients.keys():
+            self.current_client = self.clients[phone_session]
+            logger.info(f'Выбран клиент: session_{phone_session}')
+            return self.current_client
+        
+        elif phone_session and phone_session not in self.clients:
+            logger.warning(
+                f'Клиент с номером {phone_session} не найден.\n'
+                f'Доступные номера: {list(self.clients.keys())}.\n'
+                'Будет выбран следующий доступный клиент.'
+            )
+            switch = True
         
         if not self.client_cycle:
             self.client_cycle = cycle(self.clients.values())
 
         if switch or self.current_client is None:
-            self.current_client = next(self.client_cycle, None)
+            self.current_client = next(self.client_cycle, None) 
             
         return self.current_client
     

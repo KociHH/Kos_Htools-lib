@@ -9,7 +9,7 @@ with open(os.path.join(here, "README.md"), "r", encoding="utf-8") as fh:
 
 setup(
     name="kos_Htools",
-    version="0.1.1.post2",
+    version="0.1.2",
     packages=find_packages(),
     install_requires=[
         "telethon>=1.39.0",
@@ -18,7 +18,7 @@ setup(
     ],
     author=f"{__user_name__}",
     author_email=f"{__me_email__}",
-    description="Мини библиотека для работы с Telegram и Redis",
+    description="Мини библиотека для работы с Telegram, Redis, SQLAlchemy",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url=f"https://github.com/{__user_name__}/helping_libs",

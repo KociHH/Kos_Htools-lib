@@ -1,7 +1,7 @@
 Metadata-Version: 2.4
 Name: kos_Htools
-Version: 0.1.1.post1
-Summary: Мини библиотека для работы с Telegram и Redis
+Version: 0.1.2
+Summary: Мини библиотека для работы с Telegram, Redis, SQLAlchemy
 Home-page: https://github.com/kosiniii/helping_libs
 Author: kosiniii
 Author-email: defensiv2010@gmail.com
@@ -191,9 +191,44 @@ redis_base.cached(ex=3600)  # ex - время жизни кэша в секун�
 cached_data = redis_base.get_cached()
 ```
 
+### SQLAlchemy DAO
+
+В библиотеке реализован универсальный асинхронный слой доступа к данным (DAO) для работы с SQLAlchemy.
+
+#### Пример использования
+
+```python
+from kos_Htools.sql.sql_alchemy.dao import BaseDAO
+from my_models import User  # Ваша модель SQLAlchemy
+from sqlalchemy.ext.asyncio import AsyncSession
+
+dao = BaseDAO(User, db_session)  # db_session — экземпляр AsyncSession
+
+# Получить одного пользователя или сделать условие
+user = await dao.get_one(User.user_id == 123456)
+if user:
+    ...
+else:
+    ...
+
+# Создать пользователя
+new_user = await dao.create({'name': 'Иван', 'age': 30})
+
+# Обновить пользователя (отследить) - авто
+await dao.update(User.id == 1, {'name': 'Петр', 'age': 31})
+```
+
+#### Описание классов
+
+- **BaseDAO** — базовый класс для CRUD-операций.
+- **Update_date** — вспомогательный класс для обновления и логирования изменений в объекте.
+
+
+
 ## Требования
 
 - Python 3.10+
 - Telethon
 - Redis
+- SQLAlchemy
 - python-dotenv 
