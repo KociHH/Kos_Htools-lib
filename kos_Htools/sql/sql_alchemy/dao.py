@@ -40,14 +40,14 @@ class BaseDAO:
                 
         try:
             update = Update_date(
-                base=self.get_one(),
+                base=exiting,
                 params=data
             )
             await update.save_(self.db_session)
             return True
         
         except Exception as e:
-            await self.session.rollback()
+            await self.db_session.rollback()
             logger.error(f'DAO Ошибка: {e}')
             return False
         

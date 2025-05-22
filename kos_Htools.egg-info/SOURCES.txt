@@ -8,6 +8,9 @@ kos_Htools.egg-info/requires.txt
 kos_Htools.egg-info/top_level.txt
 kos_Htools/redis_core/__init__.py
 kos_Htools/redis_core/redisetup.py
+kos_Htools/sql/__init__.py
+kos_Htools/sql/sql_alchemy/__init__.py
+kos_Htools/sql/sql_alchemy/dao.py
 kos_Htools/telethon_core/__init__.py
 kos_Htools/telethon_core/clients.py
 kos_Htools/telethon_core/config.py

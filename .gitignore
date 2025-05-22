@@ -13,3 +13,7 @@ testings.py
 tools.py
 *.session
 .pypirc
+.pytest_cache/
+*.coverage
+*.log
+*.sqlite3

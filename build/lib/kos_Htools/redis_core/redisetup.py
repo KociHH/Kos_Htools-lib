@@ -15,8 +15,9 @@ class RedisBase:
         key = key or self.key
         data = data or self.data
         
-        if isinstance(data, dict):
+        if isinstance(data, (dict, list)):
             data = json.dumps(data)
+            
         try:
             self.redis.set(name=key, value=data, ex=ex)
         except Exception as e:
@@ -36,7 +37,7 @@ class RedisBase:
                 logger.warning(f'Ключ не найден: {key}')
                 return result
                 
-            if data_type == dict:
+            if data_type in (dict, list):
                 try:
                     return json.loads(cached_data)
                 except json.JSONDecodeError:
