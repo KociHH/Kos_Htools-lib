@@ -2,14 +2,14 @@ from setuptools import setup, find_packages
 import os
 
 here = os.path.abspath(os.path.dirname(__file__))
-from tools import VERSION, USER_NAME, ME_EMAIL
+from tools import USER_NAME, ME_EMAIL
 
 with open(os.path.join(here, "README.md"), "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
     name="kos_Htools",
-    version=VERSION,
+    version='0.1.2.post6',
     packages=find_packages(),
     install_requires=[
         "telethon>=1.39.0",
