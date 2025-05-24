@@ -11,9 +11,8 @@ class RedisBase:
         self.key = key
         self.data = data
     
-    def cached(self, key: str | None = None, data: Union[Dict, List] | None = None, ex: int | None = None) -> None:   
+    def cached(self, data: Union[Dict, List], key: str | None = None, ex: int | None = None) -> None:   
         key = key or self.key
-        data = data or self.data
         
         if isinstance(data, (dict, list)):
             data = json.dumps(data)
@@ -26,7 +25,7 @@ class RedisBase:
     def get_default_value(self, data_type: type) -> Union[Dict, List]:
         return {} if data_type == dict else []
     
-    def get_cached(self, key: str | None = None, data_type: type | None = None) -> Union[Dict, List]:
+    def get_cached(self, key: str | None = None, data_type: type | None = None) -> Union[Dict, List, str, bytes]:
         key = key or self.key
         data_type = data_type or type(self.data)
         result = self.get_default_value(data_type)
@@ -43,7 +42,12 @@ class RedisBase:
                 except json.JSONDecodeError:
                     logger.error(f'Ошибка декодирования JSON для ключа: {key}')
                     return result
-            return cached_data
+            else:
+                try:
+                    return cached_data.decode('utf-8')
+                except UnicodeDecodeError:
+                    logger.error(f'Ошибка декодирования UTF-8 для ключа: {key}')
+                    return cached_data
             
         except Exception as e:
             logger.error(f'Ошибка получения данных: {e}')
