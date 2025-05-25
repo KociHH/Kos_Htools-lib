@@ -29,29 +29,26 @@ class RedisBase:
         key = key or self.key
         data_type = data_type or type(self.data)
         result = self.get_default_value(data_type)
-        
+
         try:
             cached_data = self.redis.get(key)
             if not cached_data:
                 logger.warning(f'Ключ не найден: {key}')
                 return result
-                
+
+            decode_data = cached_data.decode('utf-8')
             if data_type in (dict, list):
                 try:
-                    return json.loads(cached_data)
+                    return json.loads(decode_data)
                 except json.JSONDecodeError:
                     logger.error(f'Ошибка декодирования JSON для ключа: {key}')
                     return result
             else:
-                try:
-                    return cached_data.decode('utf-8')
-                except UnicodeDecodeError:
-                    logger.error(f'Ошибка декодирования UTF-8 для ключа: {key}')
-                    return cached_data
+                return decode_data
             
         except Exception as e:
             logger.error(f'Ошибка получения данных: {e}')
-            return result    
+            return result   
 
     def delete_key(self, key: str | None = None) -> None:
         key = key or self.key
