@@ -179,26 +179,29 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 dao = BaseDAO(User, db_session)  # db_session — экземпляр AsyncSession
 
-# Получить одного пользователя или сделать условие
+# Получить одну запись по условию
 user = await dao.get_one(User.user_id == 123456)
-if user:
-    ...
-else:
-    ...
 
-# Создать пользователя
+# Создать новую запись
 new_user = await dao.create({'name': 'Иван', 'age': 30})
 
-# Обновить пользователя (отследить) - авто
+# Обновить запись
 await dao.update(User.id == 1, {'name': 'Петр', 'age': 31})
+
+# Получить все значения столбца
+names = await dao.get_all_column_values(User.name)
+
+# Получить все записи
+all_users = await dao.get_all()
 ```
 
-#### Описание классов
+#### Описание методов BaseDAO
 
-- **BaseDAO** — базовый класс для CRUD-операций.
-- **Update_date** — вспомогательный класс для обновления и логирования изменений в объекте.
-
-
+- **get_one(where)** — получить одну запись по условию (или None).
+- **create(data)** — создать новую запись из словаря.
+- **update(where, data)** — обновить запись по условию.
+- **get_all_column_values(column)** — получить все значения столбца.
+- **get_all()** — получить все записи модели.
 
 ## Требования
 

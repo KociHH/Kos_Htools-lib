@@ -126,7 +126,9 @@ class MultiAccountManager:
             self.client_cycle = cycle(self.clients.values())
             return self.client_cycle
         except Exception as e:
-            logger.error(f'Не перепрал в функции cycle_clients: \n {e}')
+            logger.error(f'Ошибка в функции cycle_clients: \n {e}')
+            self.client_cycle = None
+            return None
             
 
 def create_multi_account_manager():

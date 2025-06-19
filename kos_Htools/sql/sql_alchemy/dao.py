@@ -13,6 +13,10 @@ class BaseDAO:
         self.db_session = db_session
 
     async def get_one(self, where: ColumnElement) -> Optional[DeclarativeMeta]:
+        """
+        Получить одну запись модели, удовлетворяющую условию where.
+        Возвращает объект модели или None, если не найдено.
+        """
         try:
             result = await self.db_session.execute(select(self.model).where(where))
             return result.scalars().one_or_none()
@@ -21,11 +25,14 @@ class BaseDAO:
             return None
 
     async def create(self, data: Dict[str, Any]) -> Optional[DeclarativeMeta]:
+        """
+        Создать новую запись в базе данных на основе словаря data.
+        Возвращает созданный объект или None при ошибке.
+        """
         try:
             obj = self.model(**data)
             self.db_session.add(obj)
             await self.db_session.commit()
-            logger.info('DAO добавлено в базу')
             return obj
         except Exception as e:
             await self.db_session.rollback()
@@ -33,6 +40,10 @@ class BaseDAO:
             return None
 
     async def update(self, where: ColumnElement, data: Dict[str, Any]) -> bool:
+        """
+        Обновить запись, найденную по условию where, данными из data.
+        Возвращает True при успехе, иначе False.
+        """
         exiting = await self.get_one(where)
         if not exiting:
             logger.warning(f'DAO Объект не найден для обновления по: {where}')
@@ -51,6 +62,32 @@ class BaseDAO:
             logger.error(f'DAO Ошибка: {e}')
             return False
         
+    async def get_all_column_values(self, column) -> list[Any]:
+        """
+        Получить все значения указанного столбца column для данной модели.
+        Возвращает список значений.
+        """
+        try:
+            stmt = select(column)
+            result = await self.db_session.execute(stmt)
+            return [row[0] for row in result.fetchall()]
+        
+        except Exception as e:
+            logger.error(f"DAO Ошибка при получении значений колонки: {e}")
+            return []
+        
+    async def get_all(self) -> list[DeclarativeMeta]:
+        """
+        Получить все записи данной модели из базы данных.
+        Возвращает список объектов модели.
+        """
+        try:
+            result = await self.db_session.execute(select(self.model))
+            return result.scalars().all()
+        except Exception as e:
+            logger.error(f'DAO Ошибка при получении всех объектов: {e}')
+            return []
+        
 
 class Update_date:
     def __init__(self, base, params: dict[str, Any]):
@@ -68,12 +105,6 @@ class Update_date:
                         self.changes[key] = [old, items]
                 else:
                     logger.error(f"Не найден атрибут '{key}' в объекте {self.base.__class__.__name__}")
-            if self.changes:
-                user_id = self.params.get('user_id', 'не передано')
-                logger.info(
-                    f"Обновление пользователя {user_id}: "
-                    f"Изменены поля: {list(self.changes.keys())}"
-                )
             return self.changes
             
         except Exception as e:
@@ -87,7 +118,6 @@ class Update_date:
         try:
             changes = self.update()
             if not changes:
-                logger.info('Нет изменений.')
                 return True
 
             db_session.add(self.base)

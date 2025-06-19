@@ -17,3 +17,4 @@ tools.py
 *.coverage
 *.log
 *.sqlite3
+setup.py
