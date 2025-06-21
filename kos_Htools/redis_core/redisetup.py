@@ -38,15 +38,17 @@ class RedisBase:
                 logger.warning(f'Ключ не найден: {self.key}')
                 return result
 
-            decode_data = cached_data.decode('utf-8')
+            if isinstance(cached_data, bytes):
+                cached_data = cached_data.decode('utf-8')
+
             if data_type in (dict, list):
                 try:
-                    return json.loads(decode_data)
+                    return json.loads(cached_data)
                 except json.JSONDecodeError:
                     logger.error(f'Ошибка декодирования JSON для ключа: {self.key}')
                     return result
             else:
-                return decode_data
+                return cached_data
             
         except Exception as e:
             logger.error(f'Ошибка получения данных: {e}')
@@ -57,7 +59,10 @@ class RedisBase:
             self.redis.delete(self.key)
         except Exception as e:
             logger.error(f'Ошибка удаления ключа {self.key}: {e}')
-
+    
+    @staticmethod
+    def decode_list_item(l: list) -> list:
+        return [item.decode('utf-8') if isinstance(item, bytes) else item for item in l]
 
 class RedisShortened(RedisBase):
     def lpush(self, *values):
@@ -72,8 +77,14 @@ class RedisShortened(RedisBase):
     def rpop(self):
         return self.redis.rpop(self.key)
 
-    def lrange(self, start, end):
-        return self.redis.lrange(self.key, start, end)
+    def lrange(self, start, end, decode: bool = True):
+        result = self.redis.lrange(self.key, start, end)
+        if decode:
+            return self.decode_list_item(result)
+        return result
 
     def llen(self):
         return self.redis.llen(self.key)
+
+    def lrem(self, count: int, value: str):
+        return self.redis.lrem(self.key, count, value)
