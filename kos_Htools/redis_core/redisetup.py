@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Dict, List
+from typing import Dict, List, Any
 from redis import Redis
 
 logger = logging.getLogger(__name__)
@@ -60,6 +60,12 @@ class RedisBase:
         except Exception as e:
             logger.error(f'Ошибка удаления ключа {self.key}: {e}')
     
+    def check_key_list(self) -> bool:
+        if self.redis.exists(self.key):
+            return self.redis.type(self.key) == 'list'
+        else:
+            return False
+    
     @staticmethod
     def decode_list_item(l: list) -> list:
         return [item.decode('utf-8') if isinstance(item, bytes) else item for item in l]
@@ -78,13 +84,23 @@ class RedisShortened(RedisBase):
         return self.redis.rpop(self.key)
 
     def lrange(self, start, end, decode: bool = True):
+        if not self.check_key_list():
+            raise ValueError(f'Ключ {self.key} не является списком')
+        
         result = self.redis.lrange(self.key, start, end)
         if decode:
             return self.decode_list_item(result)
         return result
 
     def llen(self):
+        if not self.check_key_list():
+            raise ValueError(f'Ключ {self.key} не является списком')
+        
         return self.redis.llen(self.key)
 
     def lrem(self, count: int, value: str):
+        if not self.check_key_list():
+            raise ValueError(f'Ключ {self.key} не является списком')
+        
         return self.redis.lrem(self.key, count, value)
+    

@@ -9,12 +9,14 @@ with open(os.path.join(here, "README.md"), "r", encoding="utf-8") as fh:
 
 setup(
     name="kos_Htools",
-    version='0.1.5.post2',
+    version='0.1.6',
     packages=find_packages(),
     install_requires=[
         "telethon>=1.39.0",
         "python-dotenv>=1.0.0",
         "redis>=5.0.0",
+        "sqlalchemy>=2.0.0",
+        "pytz>=2025.1",
     ],
     author=f"{USER_NAME}",
     author_email=f"{ME_EMAIL}",

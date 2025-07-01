@@ -1,6 +1,6 @@
 # kos_Htools
 
-Комплексная библиотека для работы с Telegram и Redis.
+Комплексная библиотека для работы с Telegram, Redis, Sqlalchemy.
 
 ## Установка
 
@@ -170,7 +170,9 @@ cached_data = redis_base.get_cached()
 
 #### RedisShortened - Специализированная работа со списками
 
-> **Рекомендация:** Для работы со списками используйте `RedisShortened` вместо `RedisBase`
+> **Рекомендация:** Для работы со списками используйте `RedisShortened` вместо `RedisBase`.
+> 
+> **Важно:** При работе со списковыми операциями, методы `lrange`, `llen`, `lrem` (и опционально `lpush`, `rpush`) выполняют внутреннюю проверку типа ключа через `check_key_list()`. Эта функция гарантирует, что ключ Redis действительно является списком, предотвращая ошибки при попытке выполнения списковых операций на ключах другого типа.
 
 ```python
 from kos_Htools.redis_core.redisetup import RedisShortened
@@ -199,6 +201,11 @@ items = redis_list.lrange(0, 2)
 
 # Получение длины списка
 length = redis_list.llen()
+
+# Удаление элемента из списка
+count = 1 # Удалить одно вхождение значения
+value = "item1"
+redis_list.lrem(count, value)
 ```
 
 #### Описание методов RedisShortened
@@ -209,9 +216,10 @@ length = redis_list.llen()
 | `rpush(*values)` | Добавить элементы в конец списка |
 | `lpop()` | Получить и удалить элемент с начала списка |
 | `rpop()` | Получить и удалить элемент с конца списка |
-| `lrange(start, end)` | Получить диапазон элементов |
+| `lrange(start, end, decode=True)` | Получить диапазон элементов. Если `decode=True` (по умолчанию), элементы будут декодированы из байтов. |
 | `llen()` | Получить длину списка |
-| `lrem()` | Удалить и проверить элемент в списке |
+| `lrem(count, value)` | Удалить `count` вхождений `value` из списка. |
+| `check_key_list()` | **Вспомогательный метод:** Проверяет, является ли текущий ключ Redis списком. Важно для обеспечения корректности операций. |
 
 ### SQLAlchemy DAO
 
@@ -250,6 +258,78 @@ all_users = await dao.get_all()
 - **get_all_column_values(column)** — получить все значения столбца.
 - **get_all()** — получить все записи модели.
 
+## Утилиты
+
+### DateMoscow - Работа со временем (Московское время)
+
+Класс `DateMoscow` предоставляет удобные методы для получения текущей даты и времени в Московском часовом поясе, а также для создания пользовательских дат.
+
+#### Пример использования
+
+```python
+from kos_Htools import DateMoscow
+
+# Создание экземпляра класса
+date_helper = DateMoscow()
+
+# Получение текущей даты (объект date)
+current_date = date_helper.conclusion_date(option='date')
+print(f"Текущая дата: {current_date}")
+
+# Получение времени в строковом формате (Дата: DD.MM.YYYY, Время: HH:MM)
+time_info = date_helper.conclusion_date(option='time_info_style_str')
+print(f"Информация о времени: \n{time_info}")
+
+# Получение даты и времени в строковом формате (DD.MM.YYYY HH:MM)
+datetime_str = date_helper.conclusion_date(option='time_and_date_str')
+print(f"Дата и время (строка): {datetime_str}")
+
+# Получение текущего времени (объект datetime без микросекунд)
+current_time_obj = date_helper.conclusion_date(option='time_now')
+print(f"Текущее время (объект): {current_time_obj}")
+
+# Получение текущего времени в формате Unix timestamp (целое число)
+timestamp_int = date_helper.conclusion_date(option='fromtimestamp')
+print(f"Timestamp: {timestamp_int}")
+
+# Создание пользовательской даты/времени с добавлением интервалов
+# Добавление 1 дня и 2 часов к текущему времени
+custom_dt_added = date_helper.custom_date(add_time={'day': 1, 'hour': 2})
+print(f"Измененная дата (добавлено 1 день 2 часа): {custom_dt_added}")
+
+# Получение текущей даты/времени без изменений (custom_date без аргументов)
+current_dt_dict = date_helper.custom_date(add_time=None)
+print(f"Текущая дата (словарь): {current_dt_dict}")
+
+# Пример форматирования даты для Redis или SQLAlchemy
+dateMSC = date_helper.conclusion_date(option='time_now')
+time_for_redis = dateMSC.isoformat() if hasattr(dateMSC, 'isoformat') else dateMSC
+print(f"Время для Redis (ISO-формат): {time_for_redis}")
+
+# **Важно для баз данных "Если в колонке стоит значение DateTime":**
+# При работе с датами в Redis, формат ISO 8601 (полученный через .isoformat())
+# является удобным и универсальным способом хранения времени.
+# Для SQLAlchemy (и большинства SQL баз данных), если поле не хранит информацию о часовом поясе,
+# рекомендуется убирать информацию о временной зоны, делая datetime "наивным".
+# Например: dateMSC.replace(tzinfo=None)
+```
+
+#### Описание методов DateMoscow
+
+- **`conclusion_date(option: str)`**
+  Получает информацию о дате и времени в различных форматах в Московском часовом поясе.
+  - `option='date'`: Возвращает текущую дату как объект `datetime.date`.
+  - `option='time_info_style_str'`: Возвращает форматированную строку "Дата: DD.MM.YYYY\nВремя: HH:MM".
+  - `option='time_and_date_str'`: Возвращает форматированную строку "DD.MM.YYYY HH:MM".
+  - `option='time_now'`: Возвращает текущее время как объект `datetime.datetime` (без микросекунд).
+  - `option='fromtimestamp'`: Возвращает текущий Unix timestamp (целое число).
+  - В случае неизвестного `option` вызывает `ValueError`.
+
+- **`custom_date(add_time: dict | None)`**
+  Позволяет получить текущую дату и время (или модифицированную) в виде словаря.
+  - `add_time`: Словарь, содержащий интервалы для добавления к текущему времени (например, `{'year': 1, 'month': 2, 'day': 3, 'hour': 4, 'minute': 5, 'second': 6}`). Необязательно.
+  - Возвращает словарь с компонентами года, месяца, дня, часа, минуты и секунды.
+
 ## Требования
 
 - Python 3.10+
@@ -257,3 +337,4 @@ all_users = await dao.get_all()
 - Redis
 - SQLAlchemy
 - python-dotenv 
+- pytz 
