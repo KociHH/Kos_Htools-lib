@@ -260,17 +260,17 @@ all_users = await dao.get_all()
 
 ## Утилиты
 
-### DateMoscow - Работа со временем (Московское время)
+### DateTemplate - Работа со временем (Московское время)
 
-Класс `DateMoscow` предоставляет удобные методы для получения текущей даты и времени в Московском часовом поясе, а также для создания пользовательских дат.
+Класс `DateTemplate` предоставляет удобные методы для получения текущей даты и времени в Московском часовом поясе, а также для создания пользовательских дат.
 
 #### Пример использования
 
 ```python
-from kos_Htools import DateMoscow
+from kos_Htools import DateTemplate
 
 # Создание экземпляра класса
-date_helper = DateMoscow()
+date_helper = DateTemplate()
 
 # Получение текущей даты (объект date)
 current_date = date_helper.conclusion_date(option='date')
@@ -301,20 +301,13 @@ print(f"Измененная дата (добавлено 1 день 2 часа)
 current_dt_dict = date_helper.custom_date(add_time=None)
 print(f"Текущая дата (словарь): {current_dt_dict}")
 
-# Пример форматирования даты для Redis или SQLAlchemy
-dateMSC = date_helper.conclusion_date(option='time_now')
-time_for_redis = dateMSC.isoformat() if hasattr(dateMSC, 'isoformat') else dateMSC
-print(f"Время для Redis (ISO-формат): {time_for_redis}")
-
-# **Важно для баз данных "Если в колонке стоит значение DateTime":**
-# При работе с датами в Redis, формат ISO 8601 (полученный через .isoformat())
-# является удобным и универсальным способом хранения времени.
-# Для SQLAlchemy (и большинства SQL баз данных), если поле не хранит информацию о часовом поясе,
-# рекомендуется убирать информацию о временной зоны, делая datetime "наивным".
-# Например: dateMSC.replace(tzinfo=None)
+# Важное замечание для сохранения в базы данных:
+# Если вы используете SQLAlchemy с колонками типа DateTime без поддержки временных зон,
+# всегда убирайте информацию о временной зоне перед сохранением:
+# например: date_obj.replace(tzinfo=None)
 ```
 
-#### Описание методов DateMoscow
+#### Описание методов DateTemplate
 
 - **`conclusion_date(option: str)`**
   Получает информацию о дате и времени в различных форматах в Московском часовом поясе.

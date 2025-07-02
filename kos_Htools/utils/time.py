@@ -1,11 +1,22 @@
 from datetime import datetime, timedelta
 import pytz
+from pytz.tzinfo import StaticTzInfo, DstTzInfo, BaseTzInfo
 
 moscow_time = pytz.timezone('Europe/Moscow')
 
-class DateMoscow:
-    def __init__(self):
-        self.now = datetime.now(moscow_time)
+class DateTemplate:
+    def __init__(self, selected_time: BaseTzInfo | StaticTzInfo | DstTzInfo | None = None):
+        """
+        Инициализирует экземпляр класса для работы с датами и временем.
+
+        Args:
+            selected_time: Объект часового пояса pytz, который будет использоваться
+                           для всех расчетов времени. Например: `pytz.timezone('Europe/Berlin')`.
+                           Если не указан, по умолчанию используется `pytz.timezone('Europe/Moscow')`.
+        """
+
+        self.selected_time = selected_time if selected_time else moscow_time
+        self.now = datetime.now(self.selected_time)
     
     def conclusion_date(self, option: str) -> str | int:
         if option == 'date':
@@ -59,5 +70,3 @@ class DateMoscow:
 
         return timed
     
-dateMSC = DateMoscow().conclusion_date(option='time_now')
-time_for_redis = dateMSC.isoformat() if hasattr(dateMSC, 'isoformat') else dateMSC

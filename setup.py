@@ -2,14 +2,13 @@ from setuptools import setup, find_packages
 import os
 
 here = os.path.abspath(os.path.dirname(__file__))
-from tools import USER_NAME, ME_EMAIL
 
 with open(os.path.join(here, "README.md"), "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
     name="kos_Htools",
-    version='0.1.6',
+    version='0.1.6.post0',
     packages=find_packages(),
     install_requires=[
         "telethon>=1.39.0",
@@ -18,12 +17,12 @@ setup(
         "sqlalchemy>=2.0.0",
         "pytz>=2025.1",
     ],
-    author=f"{USER_NAME}",
-    author_email=f"{ME_EMAIL}",
-    description="Мини библиотека для работы с Telegram, Redis, SQLAlchemy",
+    author=f"KociHH",
+    author_email=f"defensiv2010@gmail.com",
+    description="Библиотека для работы с Telegram, Redis, SQLAlchemy",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url=f"https://github.com/{USER_NAME}/helping_libs",
+    url=f"https://github.com/KociHH/helping_lib",
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
