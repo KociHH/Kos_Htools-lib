@@ -8,7 +8,7 @@ with open(os.path.join(here, "README.md"), "r", encoding="utf-8") as fh:
 
 setup(
     name="kos_Htools",
-    version='0.1.6.post0',
+    version='0.1.6.1',
     packages=find_packages(),
     install_requires=[
         "telethon>=1.39.0",

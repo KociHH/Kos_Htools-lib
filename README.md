@@ -248,6 +248,9 @@ names = await dao.get_all_column_values(User.name)
 
 # Получить все записи
 all_users = await dao.get_all()
+
+# Обнулить атрибуты 'name' и 'age' для ВСЕХ пользователей, у которых is_active == True
+await dao.null_objects(attrs_null=['name', 'age'], where=User.is_active == True)
 ```
 
 #### Описание методов BaseDAO
@@ -257,6 +260,8 @@ all_users = await dao.get_all()
 - **update(where, data)** — обновить запись по условию.
 - **get_all_column_values(column)** — получить все значения столбца.
 - **get_all()** — получить все записи модели.
+- **delete(where)** — удалить записи по условию.
+- **null_objects(attrs_null, where)** — обнуляет значения заданных атрибутов во **ВСЕХ** записях, удовлетворяющих условию.
 
 ## Утилиты
 

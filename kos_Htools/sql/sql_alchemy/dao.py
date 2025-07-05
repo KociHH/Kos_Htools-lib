@@ -3,7 +3,7 @@ from typing import Type, Optional, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import DeclarativeMeta
 from sqlalchemy.sql import ColumnElement
-from sqlalchemy.sql.expression import select
+from sqlalchemy.sql.expression import select, delete, update
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +15,10 @@ class BaseDAO:
     async def get_one(self, where: ColumnElement) -> Optional[DeclarativeMeta]:
         """
         Получить одну запись модели, удовлетворяющую условию where.
+        
+        where:
+            Условие для обновления записей (User.id == 1).
+
         Возвращает объект модели или None, если не найдено.
         """
         try:
@@ -27,6 +31,10 @@ class BaseDAO:
     async def create(self, data: Dict[str, Any]) -> Optional[DeclarativeMeta]:
         """
         Создать новую запись в базе данных на основе словаря data.
+        
+        data:
+            Атрибуты и их значение ("ready": True)
+        
         Возвращает созданный объект или None при ошибке.
         """
         try:
@@ -42,6 +50,12 @@ class BaseDAO:
     async def update(self, where: ColumnElement, data: Dict[str, Any]) -> bool:
         """
         Обновить запись, найденную по условию where, данными из data.
+
+        where:
+            Условие для обновления записей (User.id == 1).
+        data:
+            Атрибты и их новое значение ("ready": True)
+            
         Возвращает True при успехе, иначе False.
         """
         exiting = await self.get_one(where)
@@ -88,6 +102,47 @@ class BaseDAO:
             logger.error(f'DAO Ошибка при получении всех объектов: {e}')
             return []
         
+    async def delete(self, where: ColumnElement) -> bool:
+        """
+        Удаляет записи из базы данных, удовлетворяющие условию.
+
+        where:
+            Условие для удаления записей (User.id == 1).
+
+        Возвращает True, если удаление прошло успешно, иначе False.
+        """
+        try:
+            stmt = delete(self.model).where(where)
+            await self.db_session.execute(stmt)
+            await self.db_session.commit()
+            return True
+        except Exception as e:
+            await self.db_session.rollback()
+            logger.error(f'DAO Ошибка при удалении: {e}')
+            return False
+
+    async def null_objects(self, attrs_null: list[str], where: ColumnElement) -> bool:
+        """
+        Обнуляет значения заданных атрибутов (устанавливает в None) во ВСЕХ записях модели,
+        удовлетворяющих условию 'where'.
+
+        attrs_null:
+            Список строк, представляющих имена атрибутов модели, которые нужно установить в None.
+        where: 
+            Условие для поиска записей (например, User.is_active == True).
+
+        Возвращает True, если обнуление прошло успешно, иначе False.
+        """
+        try:
+            update_data = {attr_name: None for attr_name in attrs_null}
+            stmt = update(self.model).where(where).values(**update_data)
+            result = await self.db_session.execute(stmt)
+            await self.db_session.commit()
+            return result.rowcount > 0
+        except Exception as e:
+            await self.db_session.rollback()
+            logger.error(f"DAO Ошибка при обнулении элементов: {e}")
+            return False
 
 class Update_date:
     def __init__(self, base, params: dict[str, Any]):
@@ -110,7 +165,7 @@ class Update_date:
         except Exception as e:
             logger.error(
                 f'Ошибка в классе: {__class__.__name__} в функции update\n'
-                f'Причина: {e}'
+                f'Причина:\n {e}'
                 )
             raise
     
