@@ -174,6 +174,8 @@ cached_data = redis_base.get_cached()
 > 
 > **Важно:** При работе со списковыми операциями, методы `lrange`, `llen`, `lrem` (и опционально `lpush`, `rpush`) выполняют внутреннюю проверку типа ключа через `check_key_list()`. Эта функция гарантирует, что ключ Redis действительно является списком, предотвращая ошибки при попытке выполнения списковых операций на ключах другого типа.
 
+##### Ниже представленны функции которые есть в официальной [документации Redis](https://redis.io/docs/). 
+
 ```python
 from kos_Htools.redis_core.redisetup import RedisShortened
 import redis
@@ -249,7 +251,7 @@ names = await dao.get_all_column_values(User.name)
 # Получить все записи
 all_users = await dao.get_all()
 
-# Обнулить атрибуты 'name' и 'age' для ВСЕХ пользователей, у которых is_active == True
+# Обнулить атрибуты; например: ['name', 'age'] для ВСЕХ пользователей, у которых is_active == True
 await dao.null_objects(attrs_null=['name', 'age'], where=User.is_active == True)
 ```
 
