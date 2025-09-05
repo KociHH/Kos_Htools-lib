@@ -137,4 +137,10 @@ def create_multi_account_manager():
     return MultiAccountManager(data_telethon)
 
 
-multi = None
+multi: MultiAccountManager | None = None
+
+def get_multi_manager() -> MultiAccountManager:
+    global multi
+    if multi is None:
+        multi = create_multi_account_manager()
+    return multi

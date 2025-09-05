@@ -59,14 +59,15 @@ TELEGRAM_PHONE_NUMBER=phone1,phone2,phone3
 ### Telegram Tools
 
 ```python
-from kos_Htools.telethon_core import multi, create_custom_manager
+from kos_Htools.telethon_core import multi, create_custom_manager, get_multi_manager
 from kos_Htools.telethon_core.utils.parse import UserParse
 import asyncio
 
 async def main():
     # Способ 1: Использование предварительно созданного экземпляра multi
     # (Использует данные из .env файла)
-    client = await multi()
+    manager = get_multi_manager()
+    client = await manager()
     
     # Способ 2: Создание пользовательского менеджера с собственными данными
     accounts_data = [
@@ -92,12 +93,11 @@ async def main():
     messages = await parser.collect_user_messages(limit=100, sum_count=True)
     
     # Закрытие клиентов после использования
-    await multi.stop_clients()
+    await manager.stop_clients()
     await custom_multi.stop_clients()
 
 if __name__ == '__main__':
     asyncio.run(main())
-```
 
 ### Полный пример работы с парсингом пользователей
 
@@ -114,7 +114,8 @@ logger = logging.getLogger(__name__)
 
 async def main():
     # Получение клиента Telegram
-    client = await multi()
+    manager = get_multi_manager()
+    client = await manager()
     
     # Пример парсинга ID пользователей из чата
     chat_data = {'chats': ['https://t.me/example_chat']}
@@ -141,7 +142,7 @@ async def main():
             logger.info(f"Пользователь {user_id}: {data.get('total_messages', 0)} сообщений")
     
     # Закрытие клиентов
-    await multi.stop_clients()
+    await manager.stop_clients()
     
     return user_ids, messages
 
@@ -251,8 +252,17 @@ names = await dao.get_all_column_values(User.name)
 # Получить все записи
 all_users = await dao.get_all()
 
-# Обнулить атрибуты; например: ['name', 'age'] для ВСЕХ пользователей, у которых is_active == True
+# Обнулить атрибуты 'name' и 'age' для ВСЕХ пользователей, у которых is_active == True
 await dao.null_objects(attrs_null=['name', 'age'], where=User.is_active == True)
+
+# Получить одного пользователя по имени, сортируя по ID в порядке убывания (для дубликатов)
+user_ordered = await dao.get_one_ordered_or_none(User.name == 'Иван', User.id.desc())
+if user_ordered:
+    print(f"Найден пользователь: {user_ordered.name} с ID: {user_ordered.id}")
+
+# Получить все города для пользователей с именем 'Alice'
+alice_cities = await dao.get_all_column_values(User.city, where=User.name == 'Alice')
+print(f"Города для Alice: {alice_cities}")
 ```
 
 #### Описание методов BaseDAO
@@ -260,10 +270,11 @@ await dao.null_objects(attrs_null=['name', 'age'], where=User.is_active == True)
 - **get_one(where)** — получить одну запись по условию (или None).
 - **create(data)** — создать новую запись из словаря.
 - **update(where, data)** — обновить запись по условию.
-- **get_all_column_values(column)** — получить все значения столбца.
+- **get_all_column_values(column, where)** — получить список значений указанного столбца, опционально фильтруя по условию.
 - **get_all()** — получить все записи модели.
 - **delete(where)** — удалить записи по условию.
 - **null_objects(attrs_null, where)** — обнуляет значения заданных атрибутов во **ВСЕХ** записях, удовлетворяющих условию.
+- **get_one_ordered_or_none(where, order_by_clause)** — получить один объект модели по условию, используя сортировку.
 
 ## Утилиты
 

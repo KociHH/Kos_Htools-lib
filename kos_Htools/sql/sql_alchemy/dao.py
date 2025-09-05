@@ -76,13 +76,22 @@ class BaseDAO:
             logger.error(f'DAO Ошибка: {e}')
             return False
         
-    async def get_all_column_values(self, column) -> list[Any]:
+    async def get_all_column_values(self, column: ColumnElement, where: ColumnElement | None = None) -> list[Any]:
         """
-        Получить все значения указанного столбца column для данной модели.
-        Возвращает список значений.
+        Получает список всех значений указанного столбца для данной модели,
+        опционально фильтруя записи по условию.
+
+        column: Столбец, значения которого нужно получить (например, User.city).
+        where: Опциональное условие для фильтрации записей (например, User.name == 'Alice').
+
+        
+        Возвращает список значений указанного столбца.
         """
         try:
             stmt = select(column)
+            if where is not None:
+                stmt = stmt.where(where)
+            
             result = await self.db_session.execute(stmt)
             return [row[0] for row in result.fetchall()]
         
@@ -126,10 +135,9 @@ class BaseDAO:
         Обнуляет значения заданных атрибутов (устанавливает в None) во ВСЕХ записях модели,
         удовлетворяющих условию 'where'.
 
-        attrs_null:
-            Список строк, представляющих имена атрибутов модели, которые нужно установить в None.
-        where: 
-            Условие для поиска записей (например, User.is_active == True).
+        attrs_null: Список строк, представляющих имена атрибутов модели,
+                    которые нужно обнулить (установить в None).
+        where: Условие для поиска записей (например, User.is_active == True).
 
         Возвращает True, если обнуление прошло успешно, иначе False.
         """
@@ -143,6 +151,33 @@ class BaseDAO:
             await self.db_session.rollback()
             logger.error(f"DAO Ошибка при обнулении элементов: {e}")
             return False
+
+    async def get_one_ordered_or_none(
+        self, where: ColumnElement, order_by_clause: ColumnElement | None = None
+    ) -> Optional[DeclarativeMeta]:
+        """
+        Получает один объект модели по условию, используя сортировку для детерминированного выбора,
+        если условию соответствует несколько записей (например, при наличии дубликатов в колонке).
+
+        where: Условие для поиска объекта (например, User.user_id == 123456).
+        order_by_clause: Опциональный столбец или выражение для сортировки
+                        результатов перед выбором первого. Например, User.id.desc().
+                        Если не указан, порядок не гарантирован при наличии дубликатов.
+
+        
+        Возвращает один объект модели, удовлетворяющий условию и сортировке, или None, если не найдено.
+        """
+        try:
+            stmt = select(self.model).where(where)
+            if order_by_clause is not None:
+                stmt = stmt.order_by(order_by_clause)
+            
+            result = await self.db_session.execute(stmt)
+            return result.scalars().first()
+        except Exception as e:
+            logger.error(f'DAO Ошибка при получении одного объекта с сортировкой: {e}')
+            return None
+
 
 class Update_date:
     def __init__(self, base, params: dict[str, Any]):
