@@ -87,14 +87,14 @@ class BaseDAO:
 
         columns: Один столбец (ColumnElement) или кортеж столбцов (Tuple[ColumnElement, ...]),
                 значения которых нужно получить.
-        where: Опциональное условие для фильтрации записей (например, User.name == 'Alice').
+        where: Опциональное условие для фильтрации записей (например, User.user_id == 123456).
 
         
         Возвращает список значений, где каждый элемент - это значение одного столбца (если был передан один столбец),
             или кортеж значений нескольких столбцов (если был передан кортеж столбцов).
         """
         try:
-            stmt = select(columns)
+            stmt = select(*columns) if isinstance(columns, tuple) else select(columns)
             if where is not None:
                 stmt = stmt.where(where)
             
