@@ -1,5 +1,5 @@
 import logging
-from typing import Type, Optional, Dict, Any
+from typing import Type, Optional, Dict, Any, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import DeclarativeMeta
 from sqlalchemy.sql import ColumnElement
@@ -76,27 +76,37 @@ class BaseDAO:
             logger.error(f'DAO Ошибка: {e}')
             return False
         
-    async def get_all_column_values(self, column: ColumnElement, where: ColumnElement | None = None) -> list[Any]:
+    async def get_all_column_values(
+        self, 
+        columns: ColumnElement | Tuple[ColumnElement, ...], 
+        where: ColumnElement | None = None
+    ) -> list[Any] | list[Tuple[Any, ...]]:
         """
-        Получает список всех значений указанного столбца для данной модели,
+        Получает список всех значений указанных столбца(-ов) для данной модели,
         опционально фильтруя записи по условию.
 
-        column: Столбец, значения которого нужно получить (например, User.city).
+        columns: Один столбец (ColumnElement) или кортеж столбцов (Tuple[ColumnElement, ...]),
+                значения которых нужно получить.
         where: Опциональное условие для фильтрации записей (например, User.name == 'Alice').
 
         
-        Возвращает список значений указанного столбца.
+        Возвращает список значений, где каждый элемент - это значение одного столбца (если был передан один столбец),
+            или кортеж значений нескольких столбцов (если был передан кортеж столбцов).
         """
         try:
-            stmt = select(column)
+            stmt = select(columns)
             if where is not None:
                 stmt = stmt.where(where)
             
             result = await self.db_session.execute(stmt)
-            return [row[0] for row in result.fetchall()]
+
+            if isinstance(columns, Tuple):
+                return result.fetchall()
+            else:
+                return [row[0] for row in result.fetchall()]
         
         except Exception as e:
-            logger.error(f"DAO Ошибка при получении значений колонки: {e}")
+            logger.error(f"DAO Ошибка при получении значений колонок: {e}")
             return []
         
     async def get_all(self) -> list[DeclarativeMeta]:

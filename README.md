@@ -260,9 +260,13 @@ user_ordered = await dao.get_one_ordered_or_none(User.name == 'Иван', User.i
 if user_ordered:
     print(f"Найден пользователь: {user_ordered.name} с ID: {user_ordered.id}")
 
-# Получить все города для пользователей с именем 'Alice'
-alice_cities = await dao.get_all_column_values(User.city, where=User.name == 'Alice')
-print(f"Города для Alice: {alice_cities}")
+# Получить все имена для пользователей с id 123456 (один столбец)
+alice_cities = await dao.get_all_column_values(User.name, User.name == 123456)
+print(f"Имена: {alice_cities}")
+
+# Получить имена и дату для пользователей с id 123456 (несколько столбцов)
+alice_names_ages = await dao.get_all_column_values((User.name, User.date), User.name == 123456)
+print(f"Имена и даты: {alice_names_ages}")
 ```
 
 #### Описание методов BaseDAO
@@ -270,7 +274,7 @@ print(f"Города для Alice: {alice_cities}")
 - **get_one(where)** — получить одну запись по условию (или None).
 - **create(data)** — создать новую запись из словаря.
 - **update(where, data)** — обновить запись по условию.
-- **get_all_column_values(column, where)** — получить список значений указанного столбца, опционально фильтруя по условию.
+- **get_all_column_values(columns, where)** — получить список значений из одного или нескольких столбцов, опционально фильтруя по условию. Возвращает список значений (для одного столбца) или список кортежей (для нескольких столбцов).
 - **get_all()** — получить все записи модели.
 - **delete(where)** — удалить записи по условию.
 - **null_objects(attrs_null, where)** — обнуляет значения заданных атрибутов во **ВСЕХ** записях, удовлетворяющих условию.
