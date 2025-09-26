@@ -37,12 +37,14 @@ class UserParse:
         Returns:
             bool: True если проверка прошла успешно, False если есть проблемы
         """
-        from ...telethon_core import multi
+        from ...telethon_core.clients import get_multi_manager
+        
+        manager = get_multi_manager()
         
         total_chats = len(self.chat_usernames.get('chats', [])) + len(self.chat_usernames.get('channles', []))
         
         if total_chats > 100:
-            available_clients = len(multi.clients)
+            available_clients = len(manager.clients)
             
             if available_clients <= 1:
                 logger.warning(
@@ -52,7 +54,7 @@ class UserParse:
                 )
                 return False
             
-            new_client = await multi.get_or_switch_client(switch=True)
+            new_client = await manager.get_or_switch_client(switch=True)
             if not new_client:
                 logger.error('Не удалось сменить клиента')
                 return False
