@@ -374,7 +374,7 @@ date_helper.conclusion_date(option="time_now").replace(tzinfo=None)
 | Метод | Описание |
 |-------|----------|
 | `conclusion_date(option: str)` | Получает информацию о дате и времени в различных форматах в Московском часовом поясе. |
-| `custom_date(add_time: dict | None)` | Позволяет получить текущую дату и время (или модифицированную) в виде словаря. |
+| `custom_date(add_time: dict или None)` | Позволяет получить текущую дату и время (или модифицированную) в виде словаря. |
 
 #### Опции аргумента `option` для `conclusion_date`
 
