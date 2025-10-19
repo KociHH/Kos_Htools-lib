@@ -1,7 +1,7 @@
 import json
 import logging
 from typing import Dict, List, Any
-from redis import Redis
+from redis import Redis, RedisError
 
 logger = logging.getLogger(__name__)
 
@@ -18,12 +18,12 @@ class RedisBase:
     
     def cached(self, data: Dict | List, ex: int | None = None) -> None:   
         if isinstance(data, (dict, list)):
-            data = json.dumps(data)
+            data = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
             
         try:
             self.redis.set(name=self.key, value=data, ex=ex)
         except Exception as e:
-            logger.error(f'Ошибка в redis: {e}')
+            logger.exception(f'Ошибка в redis: {e}')
     
     def get_default_value(self, data_type: type) -> Dict | List:
         return {} if data_type == dict else []
@@ -45,24 +45,24 @@ class RedisBase:
                 try:
                     return json.loads(cached_data)
                 except json.JSONDecodeError:
-                    logger.error(f'Ошибка декодирования JSON для ключа: {self.key}')
+                    logger.exception(f'Ошибка декодирования JSON для ключа: {self.key}')
                     return result
             else:
                 return cached_data
             
         except Exception as e:
-            logger.error(f'Ошибка получения данных: {e}')
+            logger.exception(f'Ошибка получения данных: {e}')
             return result   
 
     def delete_key(self) -> None:
         try:
             self.redis.delete(self.key)
         except Exception as e:
-            logger.error(f'Ошибка удаления ключа {self.key}: {e}')
+            logger.exception(f'Ошибка удаления ключа {self.key}: {e}')
     
     def check_key_list(self) -> bool:
         if self.redis.exists(self.key):
-            return self.redis.type(self.key) == 'list'
+            return self.redis.type(self.key) == b'list'
         else:
             return False
     
@@ -103,4 +103,49 @@ class RedisShortened(RedisBase):
             raise ValueError(f'Ключ {self.key} не является списком')
         
         return self.redis.lrem(self.key, count, value)
+    
+class RedisDifKey:
+    def __init__(
+        self,
+        redis_client: Redis = None,
+        ):
+        self.redis = redis_client or Redis()
+    
+    def cached(self, key: str, data: Dict | List, ex: int | None = None) -> None:   
+        if isinstance(data, (dict, list)):
+            data = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
+            
+        try:
+            self.redis.set(name=key, value=data, ex=ex)
+        except Exception as e:
+            logger.exception(f'Ошибка в redis: {e}')
+    
+    def __redis_consume_key__(self, key: str) -> bool:
+        try:
+            getdel = getattr(self.redis, "getdel", None)
+            value = self.redis.getdel(key) if callable(getdel) else self.redis.execute_command("GETDEL", key)
+            return value is not None
+        except RedisError:
+            pass
+        except Exception:
+            logger.exception("Redis consume failed (GETDEL)")
+            return False
+        
+        try:
+            lua = """
+            local v = redis.call('GET', KEYS[1])
+            if not v then
+                return 0
+            end
+            redis.call('DEL', KEYS[1])
+            return 1
+            """
+            res = self.redis.eval(lua, 1, key)
+            return bool(res)
+        except RedisError:
+            logger.exception("Redis consume failed (Lua)")
+            return False
+        except Exception:
+            logger.exception("Redis consume unexpected error (Lua)")
+            return False
     

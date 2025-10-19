@@ -2,10 +2,8 @@ import logging
 import random
 from typing import Dict, List, Optional, Union
 from telethon import TelegramClient
-from telethon.tl.functions.channels import JoinChannelRequest, GetFullChannelRequest
-from telethon.tl.functions.messages import ImportChatInviteRequest
-from telethon.tl.types import ChannelParticipantsSearch, Channel, PeerChannel, User
-from telethon.errors import UserAlreadyParticipantError
+from telethon.tl.functions.channels import GetFullChannelRequest
+from telethon.tl.types import Channel, User
 import asyncio
 
 
