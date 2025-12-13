@@ -25,6 +25,7 @@ class BaseDAO:
             result = await self.db_session.execute(select(self.model).where(where))
             return result.scalars().one_or_none()
         except Exception as e:
+            await self.db_session.rollback()
             logger.error(f'DAO Ошибка: {e}')
             return None
 
@@ -106,6 +107,7 @@ class BaseDAO:
                 return [row[0] for row in result.fetchall()]
         
         except Exception as e:
+            await self.db_session.rollback()
             logger.error(f"DAO Ошибка при получении значений колонок: {e}")
             return []
         
@@ -185,6 +187,7 @@ class BaseDAO:
             result = await self.db_session.execute(stmt)
             return result.scalars().first()
         except Exception as e:
+            await self.db_session.rollback()
             logger.error(f'DAO Ошибка при получении одного объекта с сортировкой: {e}')
             return None
 

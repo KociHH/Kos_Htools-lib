@@ -1,6 +1,6 @@
 # kos_Htools
 
-Комплексная библиотека для работы с Telegram, Redis, Sqlalchemy.
+Комплексная библиотека для работы с Telethon, Redis, Sqlalchemy.
 
 ## Требования
 
