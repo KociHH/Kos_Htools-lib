@@ -8,7 +8,7 @@ with open(os.path.join(here, "README.md"), "r", encoding="utf-8") as fh:
 
 setup(
     name="kos_Htools",
-    version='0.1.6.4.post2',
+    version='0.1.6.4.post3',
     packages=find_packages(),
     install_requires=[
         "telethon>=1.39.0",
@@ -17,6 +17,10 @@ setup(
         "sqlalchemy>=2.0.0",
         "pytz>=2025.1",
     ],
+    extras_require={
+        "telethon": ["telethon>=1.39.0"],
+        "all": ["telethon>=1.39.0"],
+    },
     author=f"KociHH",
     author_email=f"defensiv2010@gmail.com",
     description="Библиотека для работы с Telegram, Redis, SQLAlchemy",
