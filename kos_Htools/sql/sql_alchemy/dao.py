@@ -111,12 +111,21 @@ class BaseDAO:
             logger.error(f"DAO Ошибка при получении значений колонок: {e}")
             return []
         
-    async def get_all(self, where: ColumnElement | None = None) -> list[DeclarativeMeta]:
+    async def get_all(
+        self, 
+        where: ColumnElement | None = None,
+        order_by: ColumnElement | None = None,
+        limit: int | None = None,
+        offset: int | None = None
+    ) -> list[DeclarativeMeta]:
         """
         Получить все записи данной модели из базы данных.
         Опционально фильтровать записи по условию where.
         
         where: Опциональное условие для фильтрации записей (например, User.user_id == 123456 или and_(User.id == 1, User.name == "test")).
+        order_by: Опциональный столбец или выражение для сортировки (например, User.id.desc()).
+        limit: Опциональное ограничение количества возвращаемых записей.
+        offset: Опциональное смещение для пропуска записей (используется для пагинации).
         
         Возвращает список объектов модели.
         """
@@ -124,6 +133,12 @@ class BaseDAO:
             stmt = select(self.model)
             if where is not None:
                 stmt = stmt.where(where)
+            if order_by is not None:
+                stmt = stmt.order_by(order_by)
+            if offset is not None:
+                stmt = stmt.offset(offset)
+            if limit is not None:
+                stmt = stmt.limit(limit)
             result = await self.db_session.execute(stmt)
             return result.scalars().all()
         except Exception as e:
