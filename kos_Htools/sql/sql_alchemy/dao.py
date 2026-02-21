@@ -111,15 +111,23 @@ class BaseDAO:
             logger.error(f"DAO Ошибка при получении значений колонок: {e}")
             return []
         
-    async def get_all(self) -> list[DeclarativeMeta]:
+    async def get_all(self, where: ColumnElement | None = None) -> list[DeclarativeMeta]:
         """
         Получить все записи данной модели из базы данных.
+        Опционально фильтровать записи по условию where.
+        
+        where: Опциональное условие для фильтрации записей (например, User.user_id == 123456 или and_(User.id == 1, User.name == "test")).
+        
         Возвращает список объектов модели.
         """
         try:
-            result = await self.db_session.execute(select(self.model))
+            stmt = select(self.model)
+            if where is not None:
+                stmt = stmt.where(where)
+            result = await self.db_session.execute(stmt)
             return result.scalars().all()
         except Exception as e:
+            await self.db_session.rollback()
             logger.error(f'DAO Ошибка при получении всех объектов: {e}')
             return []
         
